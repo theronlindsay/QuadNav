@@ -9,6 +9,7 @@ import SwiftUI
 import _LocationEssentials
 
 struct DebugView: View {
+    @Environment(\.dismiss) private var dismiss
     @State private var monitor = LocationMonitor()
     
     var body: some View {
@@ -54,6 +55,13 @@ struct DebugView: View {
                 }
             }
             .navigationTitle("Location Monitor")
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Close") {
+                        dismiss()
+                    }
+                }
+            }
             .task {
                 await monitor.startLocationMonitoring()
             }
