@@ -15,17 +15,19 @@ final class LocationMonitor: NSObject, CLLocationManagerDelegate {
     //monitor gets assigned when location monitoring is started
     private var monitor: CLMonitor?
     private var eventsTask: Task<Void, Never>?
+    private var updateTask: Task<Void, Never>?
     private let locationManager = CLLocationManager()
     
-    var userLocation: CLLocation?
-    var isUserInQuad: Bool = false
+    @MainActor var userLocation: CLLocation?
+    @MainActor var isUserInQuad: Bool = false
     
     // Static center for the "Quad" condition
     let center = CLLocationCoordinate2D(latitude: 43.60437434240585, longitude: -116.20434424771985)
     //this radius variable is connected to a slider that defaults to 100 meters
     var radius: Double = 100 {
         didSet {
-            Task {
+            updateTask?.cancel()
+            updateTask = Task {
                 await updateMonitorCondition()
             }
         }
@@ -35,6 +37,11 @@ final class LocationMonitor: NSObject, CLLocationManagerDelegate {
         super.init()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
+    }
+    
+    deinit {
+        eventsTask?.cancel()
+        updateTask?.cancel()
     }
 
     /// Updates the CLMonitor condition with the current radius.
@@ -68,8 +75,9 @@ final class LocationMonitor: NSObject, CLLocationManagerDelegate {
                 guard let self else { return }
                 do {
                     for try await event in await monitor.events {
-                        //call the take action function
-                        self.takeAction(on: event)
+                        // Ensure we are still active before taking action
+                        if Task.isCancelled { break }
+                        await self.takeAction(on: event)
                     }
                 } catch {
                     #if DEBUG
@@ -84,22 +92,29 @@ final class LocationMonitor: NSObject, CLLocationManagerDelegate {
     func stop() {
         eventsTask?.cancel()
         eventsTask = nil
+        updateTask?.cancel()
+        updateTask = nil
         monitor = nil
         locationManager.stopUpdatingLocation()
     }
     
     /// Handle monitor events here.
-    private func takeAction(on event: CLMonitor.Event) {
-        if event.identifier == "Quad" {
-            switch event.state {
-            case .satisfied:
-                isUserInQuad = true
-            case .unsatisfied:
-                isUserInQuad = false
-            case .unknown:
-                break
-            @unknown default:
-                break
+    private func takeAction(on event: CLMonitor.Event) async {
+        let identifier = event.identifier
+        let state = event.state
+        
+        await MainActor.run {
+            if identifier == "Quad" {
+                switch state {
+                case .satisfied:
+                    isUserInQuad = true
+                case .unsatisfied:
+                    isUserInQuad = false
+                case .unknown:
+                    break
+                @unknown default:
+                    break
+                }
             }
         }
         
@@ -111,7 +126,10 @@ final class LocationMonitor: NSObject, CLLocationManagerDelegate {
     // MARK: - CLLocationManagerDelegate
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        userLocation = locations.last
+        let lastLocation = locations.last
+        Task { @MainActor in
+            userLocation = lastLocation
+        }
     }
 }
 

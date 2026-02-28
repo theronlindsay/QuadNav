@@ -12,24 +12,28 @@ struct ContentView : View {
     var body: some View {
         ZStack {
             RealityView { content in
-                // Create a cube model
-                let mesh = MeshResource.generateBox(size: 0.1, cornerRadius: 0.005)
-                let material = SimpleMaterial(color: .orange, roughness: 0.15, isMetallic: true)
-                let model = ModelEntity(mesh: mesh, materials: [material])
-                
-                // Position the model 0.5 meters in front of the camera
-                // In RealityKit, -Z is forward.
-                model.position = [0, 0, -0.5]
-                
-                // Add directly to the content so it shows up without plane detection
-                content.add(model)
+            // Create a cube model
+            let model = Entity()
+            let mesh = MeshResource.generateBox(size: 0.1, cornerRadius: 0.005)
+            let material = SimpleMaterial(color: .gray, roughness: 0.15, isMetallic: true)
+            model.components.set(ModelComponent(mesh: mesh, materials: [material]))
+            model.position = [0, 0.05, 0]
+
+            // Create horizontal plane anchor for the content
+            let anchor = AnchorEntity(.plane(.horizontal, classification: .any, minimumBounds: SIMD2<Float>(0.2, 0.2)))
+            anchor.addChild(model)
+
+            // Add the horizontal plane anchor to the scene
+            content.add(anchor)
+
+            content.camera = .spatialTracking
             }
             .edgesIgnoringSafeArea(.all)
             
             // UI Overlay
             VStack {
                 HStack(alignment: .center) {
-                    Text("QuadNav Reality View")
+                    Text("QuadNav")
                         .font(.headline)
                         .padding(.horizontal)
                         .padding(.vertical, 8)

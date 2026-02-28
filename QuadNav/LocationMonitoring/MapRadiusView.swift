@@ -1,5 +1,5 @@
 //
-//  RadiusView.swift
+//  MapRadiusView.swift
 //  LocationMonitoring
 //
 //  Created by Theron on 2/27/26.
@@ -8,7 +8,7 @@
 import SwiftUI
 import MapKit
 
-struct MapView: View {
+struct MapRadiusView: View {
     var monitor: LocationMonitor
     
     @State private var position: MapCameraPosition = .automatic
@@ -40,5 +40,5 @@ struct MapView: View {
 }
 
 #Preview {
-    MapView(monitor: LocationMonitor())
+    MapRadiusView(monitor: LocationMonitor())
 }

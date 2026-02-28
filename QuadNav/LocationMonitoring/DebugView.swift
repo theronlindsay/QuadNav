@@ -27,7 +27,7 @@ struct DebugView: View {
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 
-                MapView(monitor: monitor)
+                MapRadiusView(monitor: monitor)
                     .frame(height: 300)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .padding()
@@ -64,6 +64,9 @@ struct DebugView: View {
             }
             .task {
                 await monitor.startLocationMonitoring()
+            }
+            .onDisappear {
+                monitor.stop()
             }
         }
     }
