@@ -36,7 +36,7 @@ struct DebugView: View {
                     Section("Monitor Settings") {
                         VStack(alignment: .leading) {
                             Text("Radius: \(Int(monitor.radius))m")
-                            Slider(value: Bindable(monitor).radius, in: 50...2000, step: 10)
+                            Slider(value: Bindable(monitor).radius, in: 50...9000, step: 10)
                         }
                     }
                     

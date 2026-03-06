@@ -16,7 +16,6 @@ final class LocationMonitor: NSObject, CLLocationManagerDelegate {
     private var monitor: CLMonitor?
     private var eventsTask: Task<Void, Never>?
     private var updateTask: Task<Void, Never>?
-    private let locationManager = CLLocationManager()
     
     @MainActor var userLocation: CLLocation?
     @MainActor var isUserInQuad: Bool = false
@@ -30,8 +29,12 @@ final class LocationMonitor: NSObject, CLLocationManagerDelegate {
             updateTask = Task {
                 await updateMonitorCondition()
             }
+            // Immediately re-check whether user is within the new radius
+            checkDistanceToQuad()
         }
     }
+
+    private let locationManager = CLLocationManager()
 
     override init() {
         super.init()
@@ -44,6 +47,15 @@ final class LocationMonitor: NSObject, CLLocationManagerDelegate {
         updateTask?.cancel()
     }
 
+    /// Checks the user's distance to the quad center and updates `isUserInQuad` in real time.
+    @MainActor
+    private func checkDistanceToQuad() {
+        guard let userLocation else { return }
+        let centerLocation = CLLocation(latitude: center.latitude, longitude: center.longitude)
+        let distance = userLocation.distance(from: centerLocation)
+        isUserInQuad = distance <= radius
+    }
+
     /// Updates the CLMonitor condition with the current radius.
     func updateMonitorCondition() async {
         //safely get the location monitor
@@ -54,13 +66,30 @@ final class LocationMonitor: NSObject, CLLocationManagerDelegate {
         await monitor.add(quadCondition, identifier: "Quad")
     }
 
+    /// Requests location permission if needed, or starts updates if already authorized.
+    private func requestAuthorizationIfNeeded() {
+        let status = locationManager.authorizationStatus
+        switch status {
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse, .authorizedAlways:
+            locationManager.startUpdatingLocation()
+        case .denied, .restricted:
+            #if DEBUG
+            print("Location access denied or restricted.")
+            #endif
+        @unknown default:
+            break
+        }
+    }
+    
     /// Starts monitoring using a shared monitor name and listens for events.
     func startLocationMonitoring() async {
-        locationManager.requestWhenInUseAuthorization()
-        locationManager.startUpdatingLocation()
+        // Request location permission if not yet determined, or start updates if already authorized
+        requestAuthorizationIfNeeded()
         
         // Create or access a named monitor. Using the same name elsewhere accesses the same monitor.
-        self.monitor = await CLMonitor("iHeartMonitor")
+        self.monitor = await CLMonitor("QuadRadiusMonitor")
         
         // Initial condition setup
         await updateMonitorCondition()
@@ -112,6 +141,8 @@ final class LocationMonitor: NSObject, CLLocationManagerDelegate {
                     isUserInQuad = false
                 case .unknown:
                     break
+                case .unmonitored:
+                    break
                 @unknown default:
                     break
                 }
@@ -125,10 +156,17 @@ final class LocationMonitor: NSObject, CLLocationManagerDelegate {
     
     // MARK: - CLLocationManagerDelegate
     
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        // When the user responds to the permission prompt, start updates if authorized
+        requestAuthorizationIfNeeded()
+    }
+    
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         let lastLocation = locations.last
         Task { @MainActor in
             userLocation = lastLocation
+            // Re-check distance whenever location updates
+            checkDistanceToQuad()
         }
     }
 }

@@ -251,9 +251,13 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KT4MJRMQB6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = CAMERA_USAGE_DESCRIPTION;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "QuadNav needs your location to determine if you are within the Quad area.";
+				INFOPLIST_KEY_NSLocationUsageDescription = "QuadNav needs your location to determine if you are within the Quad area.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "QuadNav needs your location to determine if you are within the Quad area.QuadNav needs your location to determine if you are within the Quad area.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arkit;
@@ -284,9 +288,13 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KT4MJRMQB6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = CAMERA_USAGE_DESCRIPTION;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "QuadNav needs your location to determine if you are within the Quad area.";
+				INFOPLIST_KEY_NSLocationUsageDescription = "QuadNav needs your location to determine if you are within the Quad area.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "QuadNav needs your location to determine if you are within the Quad area.QuadNav needs your location to determine if you are within the Quad area.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arkit;
