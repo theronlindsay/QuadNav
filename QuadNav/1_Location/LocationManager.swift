@@ -78,11 +78,18 @@ final class LocationManager: NSObject,
     
     func locationManager(_ manager: CLLocationManager,
                          didUpdateHeading newHeading: CLHeading) {
+        
+        if newHeading.headingAccuracy < 0 { return }
+        
         heading = newHeading
     }
     
     func locationManager(_ manager: CLLocationManager,
                          didFailWithError error: Error) {
         print("Location error: \(error.localizedDescription)")
+    }
+    
+    func locationManagerShouldDisplayHeadingCalibration(_ manager: CLLocationManager) -> Bool {
+        return true
     }
 }

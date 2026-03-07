@@ -7,7 +7,7 @@
 import Foundation
 import CoreLocation
 
-struct Building: Identifiable {
+struct Building: Identifiable, Equatable {
     
     let id = UUID()
     let name: String
