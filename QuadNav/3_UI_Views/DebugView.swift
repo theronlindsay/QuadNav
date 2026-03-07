@@ -1,12 +1,5 @@
-//
-//  ContentView.swift
-//  LocationMonitoring
-//
-//  Created by Theron on 2/26/26.
-//
-
 import SwiftUI
-import _LocationEssentials
+import CoreLocation // Fixed: Added missing import for coordinate properties
 
 struct DebugView: View {
     @Environment(\.dismiss) private var dismiss
@@ -23,8 +16,7 @@ struct DebugView: View {
                         .background(Color.green.opacity(0.2))
                         .foregroundStyle(.green)
                         .cornerRadius(10)
-                        .padding(.horizontal)
-                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .padding()
                 }
                 
                 MapRadiusView(monitor: monitor)
@@ -33,45 +25,28 @@ struct DebugView: View {
                     .padding()
                 
                 List {
-                    Section("Monitor Settings") {
-                        VStack(alignment: .leading) {
-                            Text("Radius: \(Int(monitor.radius))m")
-                            Slider(value: Bindable(monitor).radius, in: 50...9000, step: 10)
+                    Section("Geofence Radius") {
+                        VStack {
+                            Text("\(Int(monitor.radius)) meters")
+                            Slider(value: $monitor.radius, in: 50...1000, step: 10)
                         }
                     }
                     
-                    Section("Monitor Info") {
+                    Section("Technical Info") {
                         LabeledContent("Latitude", value: "\(monitor.center.latitude)")
                         LabeledContent("Longitude", value: "\(monitor.center.longitude)")
-                        LabeledContent("Radius", value: "\(monitor.radius)m")
-                    }
-                    
-                    if let userLocation = monitor.userLocation {
-                        Section("Current Location") {
-                            LabeledContent("Latitude", value: "\(userLocation.coordinate.latitude)")
-                            LabeledContent("Longitude", value: "\(userLocation.coordinate.longitude)")
-                        }
                     }
                 }
             }
-            .navigationTitle("Location Monitor")
+            .navigationTitle("Developer Tools")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Close") {
-                        dismiss()
-                    }
+                    Button("Close") { dismiss() }
                 }
             }
             .task {
                 await monitor.startLocationMonitoring()
             }
-            .onDisappear {
-                monitor.stop()
-            }
         }
     }
-}
-
-#Preview {
-    DebugView()
 }
