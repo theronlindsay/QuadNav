@@ -39,6 +39,8 @@ class NavigationManager: NSObject, CLLocationManagerDelegate {
     // Optional (?) because the location might not be known yet.
     var userLocation: CLLocation?
     
+    var locationMonitor = LocationMonitor()
+    
     // The device’s compass heading (direction the phone is facing).
     // Also optional because it may not be available immediately.
     var userHeading: CLHeading?
@@ -114,11 +116,16 @@ class NavigationManager: NSObject, CLLocationManagerDelegate {
     
     // This delegate function is called whenever the device
     // receives new GPS location data.
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        
-        // locations is an array of recent location updates.
-        // "last" is usually the most accurate/recent reading.
-        userLocation = locations.last
+    func locationManager(
+        _ manager: CLLocationManager,
+        didUpdateLocations locations: [CLLocation]
+    ) {
+
+        guard let location = locations.last else { return }
+
+        userLocation = location
+
+        locationMonitor.updateUserLocation(location)
     }
     
     

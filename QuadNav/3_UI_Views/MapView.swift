@@ -25,6 +25,11 @@ struct MapView: View {
     let buildings: [Building]
     
     
+    // MARK: - Recenter Trigger
+    // When this value changes, the map recenters on the user.
+    let recenterTrigger: UUID
+    
+    
     // Controls the map camera (what part of the map is visible).
     // This starts centered on the user's location if available.
     @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
@@ -67,5 +72,13 @@ struct MapView: View {
                 }
             }
         }
+        
+        
+        // MARK: - Recenter Logic
+        
+        .onChange(of: recenterTrigger) {
+            position = .userLocation(fallback: .automatic)
+        }
     }
 }
+

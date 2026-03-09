@@ -5,6 +5,8 @@ import SwiftUI
 // using a declarative programming style (you describe what the UI
 // should look like rather than manually updating it).
 
+import CoreLocation
+
 
 // A SwiftUI screen is defined as a struct that conforms to the View protocol.
 // This tells SwiftUI that this struct describes a piece of UI.
@@ -22,6 +24,33 @@ struct ContentView: View {
     
     // LocationMonitor handles geofence monitoring (quad detection).
     @State private var locationMonitor = LocationMonitor()
+    
+    @State private var recenterTrigger = UUID()
+    
+    // MARK: - Debug / UI Controls
+    
+    // Controls whether the developer settings sheet is visible
+    @State private var showDebugView = false
+    
+    // Toggle for showing quad distance (controlled from DebugView)
+    @State private var showQuadDistance = false
+    
+    
+    
+    // MARK: - Helper: Distance To Quad
+    
+    var distanceToQuad: Double {
+        
+        guard let userLocation = navManager.userLocation else { return 0 }
+        
+        let quadCenter = CLLocation(
+            latitude: locationMonitor.center.latitude,
+            longitude: locationMonitor.center.longitude
+        )
+        
+        return userLocation.distance(from: quadCenter)
+    }
+    
     
     
     // MARK: - UI Layout
@@ -50,7 +79,9 @@ struct ContentView: View {
                 userLocation: navManager.userLocation,
                 
                 // Provide the list of campus buildings.
-                buildings: Building.campusBuildings
+                buildings: Building.campusBuildings,
+                
+                recenterTrigger: recenterTrigger
             )
             
             // Makes the map extend behind safe areas (like the notch).
@@ -71,10 +102,22 @@ struct ContentView: View {
                 // Inner vertical stack for building information.
                 VStack(spacing: 4) {
                     
-                    // Display selected building name.
-                    // If no building is selected, show placeholder text.
-                    Text(navManager.selectedBuilding?.name ?? "Select a Building")
-                        .font(.headline)
+                    HStack {
+                        
+                        // Display selected building name.
+                        // If no building is selected, show placeholder text.
+                        Text(navManager.selectedBuilding?.name ?? "Select a Building")
+                            .font(.headline)
+                        
+                        Spacer()
+                        
+                        // Settings / Debug button
+                        Button {
+                            showDebugView = true
+                        } label: {
+                            Image(systemName: "gearshape.fill")
+                        }
+                    }
                     
                     
                     // Display the distance to the selected building.
@@ -82,6 +125,16 @@ struct ContentView: View {
                     Text("\(Int(navManager.distanceToTarget)) meters away")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                    
+                   
+                    // MARK: - Quad Distance Display
+                    
+                    if showQuadDistance {
+                        
+                        Text("Quad Distance: \(Int(distanceToQuad)) m")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 
                 // Add padding around the text block.
@@ -120,19 +173,24 @@ struct ContentView: View {
                 
                 
                 // Displays information about the quad geofence.
-                MapRadiusView(monitor: locationMonitor)
                 
-                    // Height of this UI component.
-                    .frame(height: 120)
+                
+                
+                
+                // MARK: - Recenter Map Button
+                
+                Button {
                     
-                    // Rounded corners.
-                    .cornerRadius(15)
+                    // Resetting selection forces MapView to recenter on user
+                    recenterTrigger = UUID()
                     
-                    // Adds a white border around the component.
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 15)
-                            .stroke(.white, lineWidth: 2)
-                    )
+                } label: {
+                    
+                    Label("Recenter Map", systemImage: "location.fill")
+                        .padding(10)
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(10)
+                }
                 
                 
                 
@@ -176,5 +234,27 @@ struct ContentView: View {
             // Adds spacing between the UI and screen edges.
             .padding()
         }
+        
+        
+        // MARK: - Debug Menu Sheet
+        
+        .sheet(isPresented: $showDebugView) {
+            
+            DebugView(monitor: locationMonitor)
+            
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        
+                        Toggle("Show Quad Distance", isOn: $showQuadDistance)
+                    }
+                }
+        }
+        
+        .onChange(of: navManager.userLocation) { oldValue, newValue in
+            if let location = newValue {
+                locationMonitor.updateUserLocation(location)
+            }
+        }
     }
 }
+
