@@ -27,6 +27,11 @@ struct ContentView: View {
     
     @State private var recenterTrigger = UUID()
     
+    // MARK: - AR Navigation State
+    
+    // Tracks the current visual mode (map, split, or ar)
+    @State private var currentMode: ARMode = .map
+    
     // MARK: - Debug / UI Controls
     
     // Controls whether the developer settings sheet is visible
@@ -65,36 +70,83 @@ struct ContentView: View {
         ZStack {
             
             
-            // MARK: - Map Background
+            // MARK: - Map / AR Background
             
-            
-            // Custom MapView showing the campus and buildings.
-            MapView(
+            // Swaps out the background layer depending on the selected AR mode
+            if currentMode == .ar {
+                ARNavigationView(targetBearing: navManager.targetBearing)
+                    .ignoresSafeArea()
+            } else if currentMode == .split {
+                VStack(spacing: 0) {
+                    ARNavigationView(targetBearing: navManager.targetBearing)
+                    
+                    // The Map & Arrow combined layer
+                    ZStack {
+                        MapView(
+                            selectedBuilding: $navManager.selectedBuilding,
+                            userLocation: navManager.userLocation,
+                            buildings: Building.campusBuildings,
+                            recenterTrigger: recenterTrigger
+                        )
+                        
+                        // NEW PLACEMENT: Moved DirectionArrow here in ZStack
+                        if navManager.selectedBuilding != nil {
+                            DirectionArrowView(angle: navManager.targetBearing)
+                                .frame(width: 100, height: 100) // Smaller frame for split view
+                                .shadow(radius: 5)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .ignoresSafeArea()
+            } else {
                 
-                // Binding allows MapView to modify the selected building.
-                // The "$" means this is a two-way connection.
-                selectedBuilding: $navManager.selectedBuilding,
-                
-                // Pass the user's location to the map.
-                userLocation: navManager.userLocation,
-                
-                // Provide the list of campus buildings.
-                buildings: Building.campusBuildings,
-                
-                recenterTrigger: recenterTrigger
-            )
+                // The main Map & Arrow combined layer
+                ZStack {
+                    // Custom MapView showing the campus and buildings.
+                    MapView(
+                        // Binding allows MapView to modify the selected building.
+                        selectedBuilding: $navManager.selectedBuilding,
+                        // Pass the user's location to the map.
+                        userLocation: navManager.userLocation,
+                        // Provide the list of campus buildings.
+                        buildings: Building.campusBuildings,
+                        recenterTrigger: recenterTrigger
+                    )
+                    
+                    // NEW PLACEMENT: Moved DirectionArrow here in ZStack.
+                    // It will now be fixed relative to the map background,
+                    // but it is still NOT moving dynamically with the user pin.
+                    // (That requires complex MapView refactoring).
+                    if navManager.selectedBuilding != nil {
+                        DirectionArrowView(angle: navManager.targetBearing)
+                            .frame(width: 140, height: 140)
+                            .shadow(radius: 5)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // Makes the map extend behind safe areas (like the notch).
+                .ignoresSafeArea()
+            }
             
-            // Makes the map extend behind safe areas (like the notch).
-            .ignoresSafeArea()
             
             
+            // MARK: - Overlay UI (This stack stays fixed)
             
-            // MARK: - Overlay UI
-            
-            
-            // VStack stacks elements vertically.
             VStack {
                 
+                // MARK: - Navigation Mode Selector
+                
+                Picker("Navigation Mode", selection: $currentMode) {
+                    Text("Map").tag(ARMode.map)
+                    Text("Split").tag(ARMode.split)
+                    Text("AR").tag(ARMode.ar)
+                }
+                .pickerStyle(.segmented)
+                .padding()
+                .background(.ultraThinMaterial)
+                .cornerRadius(12)
+                .padding(.horizontal)
                 
                 // MARK: - Destination Information
                 
@@ -126,7 +178,7 @@ struct ContentView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     
-                   
+                    
                     // MARK: - Quad Distance Display
                     
                     if showQuadDistance {
@@ -152,15 +204,7 @@ struct ContentView: View {
                 Spacer()
                 
                 
-                
-                // MARK: - Direction Arrow
-                
-                
-                // Custom view that rotates an arrow toward the target building.
-                DirectionArrowView(angle: navManager.targetBearing)
-                
-                    // Define the size of the arrow view.
-                    .frame(width: 140, height: 140)
+                // OLD PLACEMENT: DirectionArrowView was here in the overlay VStack.
                 
                 
                 
@@ -257,4 +301,3 @@ struct ContentView: View {
         }
     }
 }
-
