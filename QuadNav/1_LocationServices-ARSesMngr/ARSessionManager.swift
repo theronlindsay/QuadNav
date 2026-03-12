@@ -1,36 +1,40 @@
 import ARKit
 import RealityKit
-import SwiftUI
+import Observation
 
+@Observable
 class ARSessionManager: NSObject, ARSessionDelegate {
-    weak var arView: ARView?
-    var arrowEntity: GroundArrowEntity?
-    var sessionHeadingOffset: Double = 0
-    var currentBearing: Double = 0.0 {
-        didSet { updateArrowRotation() }
+    var arView: ARView?
+    var targetBearing: Double = 0.0
+    var relativeBearing: Double = 0.0
+    
+    // Using your custom entity type
+    private var arrowEntity: GroundArrowEntity?
+    private var isArrowPlaced: Bool = false
+    
+    func setupARView(in view: ARView) {
+        self.arView = view
+        view.session.delegate = self
+        
+        let configuration = ARWorldTrackingConfiguration()
+        // FIX: Force AR space to align with True North
+        configuration.worldAlignment = .gravityAndHeading
+        configuration.planeDetection = [.horizontal]
+        
+        view.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+        setupTapGesture(for: view)
     }
     
-    func setup(arView: ARView) {
-        self.arView = arView
-        arView.session.delegate = self
-       
-        
-        let config = ARWorldTrackingConfiguration()
-        config.planeDetection = [.horizontal]
-        arView.session.run(config)
-        
-        // Add Tap Gesture to place the arrow
-        let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
-        arView.addGestureRecognizer(tap)
+    private func setupTapGesture(for view: ARView) {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+        view.addGestureRecognizer(tapGesture)
     }
     
-    @objc func handleTap(_ sender: UITapGestureRecognizer) {
+    @objc private func handleTap(_ sender: UITapGestureRecognizer) {
         guard let arView = arView else { return }
-        
         let tapLocation = sender.location(in: arView)
         
-        // Raycast specifically for horizontal planes
-        let results = arView.raycast(from: tapLocation, allowing: .existingPlaneGeometry, alignment: .horizontal)
+        let results = arView.raycast(from: tapLocation, allowing: .estimatedPlane, alignment: .horizontal)
         
         if let firstResult = results.first {
             placeArrow(at: firstResult.worldTransform)
@@ -38,43 +42,53 @@ class ARSessionManager: NSObject, ARSessionDelegate {
     }
     
     private func placeArrow(at transform: simd_float4x4) {
-        // Remove old arrow if it exists
+        // Remove old anchor/arrow if it exists
         if let currentAnchor = arView?.scene.anchors.first(where: { $0.name == "ArrowAnchor" }) {
             arView?.scene.removeAnchor(currentAnchor)
         }
         
+        // Reset transform columns to ensure no weird scaling/skewing from the raycast
         var fixedTransform = transform
         fixedTransform.columns.0 = [1,0,0,0]
         fixedTransform.columns.1 = [0,1,0,0]
         fixedTransform.columns.2 = [0,0,1,0]
-
+        
         let anchor = AnchorEntity(world: fixedTransform)
         anchor.name = "ArrowAnchor"
         
+        // Use YOUR 3D object
         let arrow = GroundArrowEntity()
         anchor.addChild(arrow)
-        self.arrowEntity = arrow
         
+        self.arrowEntity = arrow
         arView?.scene.addAnchor(anchor)
+        isArrowPlaced = true
+        
         updateArrowRotation()
     }
     
-    func update(bearing: Double, heading: Double){
+    func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        guard isArrowPlaced, let arrow = arrowEntity else { return }
         
-        let correctedBearing = bearing - heading
+        // 1. Position Logic: Auto-reposition if user gets too close
+        let cameraTransform = frame.camera.transform
+        let cameraPos = simd_make_float3(cameraTransform.columns.3.x, cameraTransform.columns.3.y, cameraTransform.columns.3.z)
+        let arrowPos = arrow.position(relativeTo: nil)
         
-        // Ignore extremely small heading changes to prevent jitter
-        if abs(bearing - currentBearing) < 0.5 { return }
+        if simd_distance(cameraPos, arrowPos) < 1.0 {
+            let forward = simd_make_float3(cameraTransform.columns.2.x, cameraTransform.columns.2.y, cameraTransform.columns.2.z)
+            let newPosition = cameraPos - (forward * 2.0)
+            arrow.setPosition(newPosition, relativeTo: nil)
+        }
         
-        self.currentBearing = bearing
+        // 2. Rotation Logic: Use your North-aligned coordinate fix
         updateArrowRotation()
     }
     
     private func updateArrowRotation() {
-        // Rotate around Y to point toward targetBearing
-        let correctedBearing = currentBearing - sessionHeadingOffset
-        let radians = Float(correctedBearing) * (.pi / 180)
-
-        arrowEntity?.orientation = simd_quatf(angle: -radians, axis: [0,1,0])
+        guard let arrow = arrowEntity else { return }
+        // Driving the rotation by the absolute bearing to the building
+        let radians = Float(targetBearing) * (.pi / 180)
+        arrow.orientation = simd_quatf(angle: -radians, axis: [0, 1, 0])
     }
 }
