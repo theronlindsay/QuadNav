@@ -17,9 +17,8 @@ import CoreLocation
 struct DebugView: View {
     
     @Environment(\.dismiss) private var dismiss
-    
-    @Bindable var monitor: LocationMonitor
-    
+    @Environment(LocationMonitor.self) private var monitor
+        
     var body: some View {
         NavigationStack {
             VStack {
@@ -33,6 +32,7 @@ struct DebugView: View {
                         .foregroundStyle(.green)
                         .cornerRadius(10)
                         .padding(.horizontal)
+                        .transition(.move(edge: .top).combined(with: .opacity))
                 }
 
                 MapRadiusView(monitor: monitor)
@@ -49,7 +49,8 @@ struct DebugView: View {
                             Text("Radius: \(Int(monitor.radius)) m")
 
                             Slider(
-                                value: $monitor.radius,
+                                value: Bindable(monitor)
+                                    .radius,
                                 in: 50...3000,
                                 step: 10
                             )
@@ -104,4 +105,9 @@ struct DebugView: View {
             }
         }
     }
+}
+
+#Preview{
+    DebugView()
+        .environment(LocationMonitor())
 }
