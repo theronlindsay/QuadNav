@@ -1,28 +1,27 @@
-//Created by Theron
+//
+// DebugView.swift
+// Created by Theron
+//
 
 import SwiftUI
-// SwiftUI is Apple's modern framework for building user interfaces.
-// It uses a declarative style where we describe what the UI should look like.
-
 import CoreLocation
-// CoreLocation provides GPS coordinates, location data,
-// and geographic utilities such as latitude and longitude.
-// This import is needed so we can access properties like
-// monitor.center.latitude and monitor.center.longitude.
 
-
-
-// This struct defines a screen in the app used for debugging tools.
-// It conforms to the View protocol, meaning it describes UI content.
+// MARK: - Developer Tools View
+// Shows debugging info for location, geofence, and Quad monitoring
 struct DebugView: View {
+    
+    // MARK: - Environment
     
     @Environment(\.dismiss) private var dismiss
     @Environment(LocationMonitor.self) private var monitor
-        
+    
+    // MARK: - Body
+    
     var body: some View {
         NavigationStack {
             VStack {
                 
+                // Status if user is inside the Quad
                 if monitor.isUserInQuad {
                     Text("📍 You are inside the Quad")
                         .font(.headline)
@@ -35,71 +34,58 @@ struct DebugView: View {
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
 
+                // Map radius preview
                 MapRadiusView(monitor: monitor)
                     .frame(height: 300)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .padding()
 
+                // Settings list
                 List {
-
+                    
+                    // MARK: Geofence Radius
                     Section("Geofence Radius") {
-
                         VStack(alignment: .leading) {
-
                             Text("Radius: \(Int(monitor.radius)) m")
-
+                            
                             Slider(
-                                value: Bindable(monitor)
-                                    .radius,
+                                value: Bindable(monitor).radius,
                                 in: 50...3000,
                                 step: 10
                             )
                         }
                     }
-
+                    
+                    // MARK: Quad Center
                     Section("Quad Center") {
-
-                        LabeledContent(
-                            "Latitude",
-                            value: "\(monitor.center.latitude)"
-                        )
-
-                        LabeledContent(
-                            "Longitude",
-                            value: "\(monitor.center.longitude)"
-                        )
+                        LabeledContent("Latitude", value: "\(monitor.center.latitude)")
+                        LabeledContent("Longitude", value: "\(monitor.center.longitude)")
                     }
-
+                    
+                    // MARK: Current Location
                     if let location = monitor.userLocation {
-
                         Section("Current Location") {
-
-                            LabeledContent(
-                                "Latitude",
-                                value: "\(location.coordinate.latitude)"
-                            )
-
-                            LabeledContent(
-                                "Longitude",
-                                value: "\(location.coordinate.longitude)"
-                            )
+                            LabeledContent("Latitude", value: "\(location.coordinate.latitude)")
+                            LabeledContent("Longitude", value: "\(location.coordinate.longitude)")
                         }
                     }
                 }
             }
-
+            
             .navigationTitle("Developer Tools")
-
+            
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Close") { dismiss() }
                 }
             }
-
+            
+            // Start monitoring when view appears
             .task(id: monitor.radius) {
                 await monitor.startLocationMonitoring()
             }
-
+            
+            // Stop monitoring when view disappears
             .onDisappear {
                 monitor.stop()
             }
@@ -107,7 +93,9 @@ struct DebugView: View {
     }
 }
 
-#Preview{
+// MARK: - Preview
+
+#Preview {
     DebugView()
         .environment(LocationMonitor())
 }

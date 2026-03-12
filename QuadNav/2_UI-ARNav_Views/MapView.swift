@@ -1,85 +1,63 @@
-//Created by Theron
+//
+// MapView.swift
+// Created by Theron, Brandon Williams & Amber Taggart
+//
 
 import SwiftUI
-// SwiftUI is used to build the interface of the app.
-
 import MapKit
-// MapKit provides Apple's map system for displaying maps,
-// locations, and map annotations.
 
-
-// This view displays the main campus map and building markers.
+// MARK: - Campus Map View
+// Displays campus map, user location, and building markers
 struct MapView: View {
     
-    // @Binding allows this view to both read and update
-    // the selected building from its parent view.
+    // MARK: - Bindings & Inputs
+    
+    /// Selected building from parent view
     @Binding var selectedBuilding: Building?
     
-    
-    // The user's current GPS location (optional because
-    // the location may not be known immediately).
+    /// User's current location
     let userLocation: CLLocation?
     
-    
-    // A list of buildings that will appear as markers on the map.
+    /// Buildings to display as map markers
     let buildings: [Building]
     
-    
-    // MARK: - Recenter Trigger
-    // When this value changes, the map recenters on the user.
+    /// Trigger to recenter map on user
     let recenterTrigger: UUID
     
     
-    // Controls the map camera (what part of the map is visible).
-    // This starts centered on the user's location if available.
+    // MARK: - State
+    
+    /// Controls the map camera position
     @State private var position: MapCameraPosition = .userLocation(followsHeading: true, fallback: .automatic)
     
     
-    // Defines the layout of the map view.
+    // MARK: - Body
+    
     var body: some View {
-        
-        // The main Apple Map view.
-        // The position binding allows the map camera to change dynamically.
         Map(position: $position) {
             
-            
-            // Shows the user's location marker on the map.
+            // User location marker
             UserAnnotation()
             
-            
-            // Loop through each building in the list
-            // and place a marker on the map.
+            // Building markers
             ForEach(buildings) { building in
-                
-                // Creates a custom annotation (marker) at the building's location.
                 Annotation(building.name, coordinate: building.coordinate) {
                     
-                    // Map pin icon from Apple's SF Symbols.
                     Image(systemName: "mappin.circle.fill")
                         .font(.title)
-                        
-                        // If this building is selected, show it in blue.
-                        // Otherwise show it in red.
                         .foregroundStyle(
                             selectedBuilding == building ? .blue : .red
                         )
-                        
-                        // When the user taps the marker,
-                        // update the selected building.
                         .onTapGesture {
                             selectedBuilding = building
                         }
                 }
             }
         }
-        
         .mapControls {
-                    MapCompass()
-                    // NEW: This button lets the user manually re-enable "Follow Heading" mode
-                    // if they accidentally scroll or rotate the map away.
-                    MapUserLocationButton()
-                }
-        
+            MapCompass()
+            MapUserLocationButton() // Allows re-enabling follow mode manually
+        }
         
         // MARK: - Recenter Logic
         
@@ -88,4 +66,3 @@ struct MapView: View {
         }
     }
 }
-

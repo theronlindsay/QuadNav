@@ -1,31 +1,22 @@
-//Created by Brandon Williams & Amber
+//
+// NavigationManager.swift
+// Created by Brandon Williams & Amber
+//
 
 import Foundation
-// Provides core Swift functionality such as data types, utilities,
-// and base classes used across most Swift programs.
-
 import CoreLocation
-// Apple framework used for working with GPS data, device location,
-// compass heading, and geographic calculations.
-
 import Observation
-// Observation is part of Apple's modern state-tracking system.
-// The @Observable macro allows SwiftUI or other UI layers to
-// automatically update when properties change.
 
 @Observable
-
 class NavigationManager: NSObject, CLLocationManagerDelegate {
     
     
-    // MARK: - Core Location Manager
+    // MARK: - Location Manager
     
     private let manager = CLLocationManager()
     
     
-    
-    
-    // MARK: - Stored State
+    // MARK: - State
     
     var userLocation: CLLocation?
     
@@ -36,13 +27,14 @@ class NavigationManager: NSObject, CLLocationManagerDelegate {
     var selectedBuilding: Building?
     
     private var filteredHeading: Double?
-
-    /// Read-only accessor for UI layers. Returns the smoothed compass heading in degrees.
+    
+    /// Smoothed compass heading for UI use (degrees)
     var filteredHeadingForUI: Double? { filteredHeading }
     
     
-    // MARK: - Computed Properties
+    // MARK: - Computed Navigation Data
     
+    /// Distance from user to selected building (meters)
     var distanceToTarget: Double {
         
         guard let userLocation, let selectedBuilding else { return 0 }
@@ -54,6 +46,7 @@ class NavigationManager: NSObject, CLLocationManagerDelegate {
     }
     
     
+    /// Compass bearing from user to selected building
     var targetBearing: Double {
         
         guard let userLocation, let selectedBuilding else { return 0 }
@@ -63,7 +56,29 @@ class NavigationManager: NSObject, CLLocationManagerDelegate {
             to: selectedBuilding.coordinate
         )
     }
-
+    
+    
+    /// Angle difference between device heading and target bearing
+    var relativeBearing: Double {
+        
+        guard let userLocation,
+              let selectedBuilding,
+              let deviceHeading = filteredHeading
+        else { return 0 }
+        
+        let target = BearingCalculator.bearing(
+            from: userLocation.coordinate,
+            to: selectedBuilding.coordinate
+        )
+        
+        var difference = target - deviceHeading
+        
+        while difference > 180 { difference -= 360 }
+        while difference < -180 { difference += 360 }
+        
+        return difference
+    }
+    
     
     // MARK: - Initialization
     
@@ -72,7 +87,7 @@ class NavigationManager: NSObject, CLLocationManagerDelegate {
         
         manager.delegate = self
         
-        // Changed to navigation grade accuracy
+        // Navigation-grade accuracy
         manager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
         
         manager.headingFilter = 1
@@ -85,18 +100,16 @@ class NavigationManager: NSObject, CLLocationManagerDelegate {
     }
     
     
-    // MARK: - CLLocationManagerDelegate Methods
-    
+    // MARK: - CLLocationManagerDelegate
     
     func locationManager(
         _ manager: CLLocationManager,
         didUpdateLocations locations: [CLLocation]
     ) {
-
         guard let location = locations.last else { return }
-
+        
         userLocation = location
-
+        
         locationMonitor.updateUserLocation(location)
     }
     
@@ -127,29 +140,4 @@ class NavigationManager: NSObject, CLLocationManagerDelegate {
     func locationManagerShouldDisplayHeadingCalibration(_ manager: CLLocationManager) -> Bool {
         return true
     }
-    
-    
-    var relativeBearing: Double {
-
-        guard let userLocation,
-              let selectedBuilding,
-              let deviceHeading = filteredHeading
-        else { return 0 }
-
-        let target = BearingCalculator.bearing(
-            from: userLocation.coordinate,
-            to: selectedBuilding.coordinate
-        )
-
-        var difference = target - deviceHeading
-
-        while difference > 180 { difference -= 360 }
-        while difference < -180 { difference += 360 }
-
-        return difference
-    }
-    
-    
-    
 }
-

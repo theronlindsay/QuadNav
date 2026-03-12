@@ -1,6 +1,11 @@
+//
+// ARNavigationView.swift
+//
+
 import SwiftUI
 import RealityKit
 
+// MARK: - AR Navigation View
 struct ARNavigationView: View {
     @Bindable var sessionManager: ARSessionManager
     @Bindable var locationMonitor: LocationMonitor
@@ -11,7 +16,7 @@ struct ARNavigationView: View {
             ARViewContainer(sessionManager: sessionManager)
                 .edgesIgnoringSafeArea(.all)
             
-            // Bottom overlay
+            // Bottom overlay for navigation status
             VStack {
                 Spacer()
                 
@@ -33,8 +38,7 @@ struct ARNavigationView: View {
                     
                     Spacer()
                     
-                    // Optional 2D arrow in AR — remove if redundant
-                    // Uncomment only if you want it
+                    // Optional 2D arrow in AR — uncomment if needed
                     /*
                     Image(systemName: "location.north.fill")
                         .resizable()
@@ -52,6 +56,7 @@ struct ARNavigationView: View {
     }
 }
 
+// MARK: - ARView Container
 struct ARViewContainer: UIViewRepresentable {
     var sessionManager: ARSessionManager
     

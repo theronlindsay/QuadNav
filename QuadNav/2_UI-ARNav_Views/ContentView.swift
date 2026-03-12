@@ -1,10 +1,14 @@
+//
+// ContentView.swift
+//
+
 import SwiftUI
 import CoreLocation
 import ARKit
 
 struct ContentView: View {
 
-    // MARK: State Objects
+    // MARK: - State Objects
     
     @State private var navManager = NavigationManager()
     @State private var locationMonitor = LocationMonitor()
@@ -16,8 +20,9 @@ struct ContentView: View {
     @State private var showQuadDistance = false
 
 
-    // MARK: Distance Helper
+    // MARK: - Distance Helper
     
+    /// Distance from user to the quad center
     var distanceToQuad: Double {
         guard let userLocation = navManager.userLocation else { return 0 }
 
@@ -30,7 +35,7 @@ struct ContentView: View {
     }
 
 
-    // MARK: UI
+    // MARK: - Body / UI
     
     var body: some View {
 
@@ -46,8 +51,7 @@ struct ContentView: View {
                 )
                 .ignoresSafeArea()
 
-            }
-            else if currentMode == .split {
+            } else if currentMode == .split {
 
                 VStack(spacing: 0) {
 
@@ -76,8 +80,7 @@ struct ContentView: View {
                 }
                 .ignoresSafeArea()
 
-            }
-            else {
+            } else {
 
                 ZStack {
 
@@ -101,8 +104,9 @@ struct ContentView: View {
 
             // MARK: Overlay UI
             
-            VStack(spacing: currentMode == .map ? 6 : 12) { // tighter spacing in full map
+            VStack(spacing: currentMode == .map ? 6 : 12) {
 
+                // Navigation mode picker
                 Picker("Navigation Mode", selection: $currentMode) {
                     Text("Map").tag(ARMode.map)
                     Text("Split").tag(ARMode.split)
@@ -114,7 +118,8 @@ struct ContentView: View {
                 .cornerRadius(12)
                 .padding(.horizontal)
 
-                VStack(spacing: currentMode == .map ? 2 : 4) { // tighter spacing in full map
+                // Selected building & distance info
+                VStack(spacing: currentMode == .map ? 2 : 4) {
                     HStack {
                         Text(navManager.selectedBuilding?.name ?? "Select a Building")
                             .font(.headline)
@@ -144,6 +149,7 @@ struct ContentView: View {
 
                 Spacer()
 
+                // Recenter and destination picker
                 HStack {
 
                     Button {
@@ -173,7 +179,6 @@ struct ContentView: View {
                     .cornerRadius(10)
                 }
             }
-            // Mode-specific top padding to push overlay down in full map
             .padding(.top, currentMode == .map ? 50 : 0)
             .padding()
         }
