@@ -54,6 +54,16 @@ extension Building {
         Building(
             name: "Administration Building",
             coordinate: CLLocationCoordinate2D(latitude: 43.603688341185745, longitude: -116.20469907947239)
+        ),
+        Building(
+            name: "BSU Quad",
+            coordinate: CLLocationCoordinate2D(latitude: 443.604060421704716, longitude: -116.20438537881842)
+        ),
+        Building(
+            name: "Math Building",
+            coordinate: CLLocationCoordinate2D(latitude: 43.604419492939876, longitude: -116.20568863212578)
         )
+        
+        
     ]
 }
