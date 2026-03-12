@@ -49,6 +49,9 @@ class NavigationManager: NSObject, CLLocationManagerDelegate {
     // This uses your custom Building struct from another file.
     var selectedBuilding: Building?
     
+    // Filtered compass heading used to smooth sensor jitter.
+    private var filteredHeading: Double?
+    
     
     // MARK: - Computed Properties
     
@@ -99,6 +102,9 @@ class NavigationManager: NSObject, CLLocationManagerDelegate {
         // kCLLocationAccuracyBest uses the most precise GPS available.
         manager.desiredAccuracy = kCLLocationAccuracyBest
         
+        // Reduces extremely small compass changes from triggering updates
+        manager.headingFilter = 2
+        
         // Requests permission from the user to access location
         // while the app is running.
         manager.requestWhenInUseAuthorization()
@@ -133,7 +139,48 @@ class NavigationManager: NSObject, CLLocationManagerDelegate {
     // heading changes.
     func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
         
+        // Determine correct heading source
+        let rawHeading =
+            newHeading.trueHeading >= 0
+            ? newHeading.trueHeading
+            : newHeading.magneticHeading
+        
+        // Smooth heading to reduce jitter
+        if let previous = filteredHeading {
+            let smoothingFactor = 0.15
+            filteredHeading = previous + smoothingFactor * (rawHeading - previous)
+        } else {
+            filteredHeading = rawHeading
+        }
+        
         // Save the newest heading measurement.
         userHeading = newHeading
     }
+    
+    // Allows the system to display compass calibration UI when needed.
+    func locationManagerShouldDisplayHeadingCalibration(_ manager: CLLocationManager) -> Bool {
+        return true
+    }
+    
+    var relativeBearing: Double {
+
+        guard let userLocation,
+              let selectedBuilding,
+              let deviceHeading = filteredHeading
+        else { return 0 }
+
+        let target = BearingCalculator.bearing(
+            from: userLocation.coordinate,
+            to: selectedBuilding.coordinate
+        )
+
+        var difference = target - deviceHeading
+
+        // Normalize into -180 ... +180
+        while difference > 180 { difference -= 360 }
+        while difference < -180 { difference += 360 }
+
+        return difference
+    }
+    
 }

@@ -40,6 +40,7 @@ struct DirectionArrowView: View {
                 // Rotates the arrow based on the angle value.
                 // This is how the arrow points toward the target location.
                 .rotationEffect(.degrees(angle))
+                .animation(.easeOut(duration: 0.2), value: angle)
                 
                 // Sets the arrow color.
                 .foregroundStyle(.orange)
@@ -52,6 +53,7 @@ struct DirectionArrowView: View {
                     .scaledToFit()
                     .frame(width: 80, height: 80)
                     .rotationEffect(.degrees(angle))
+                    .animation(.easeOut(duration: 0.2), value: angle)
                     .foregroundStyle(.blue)
                     .shadow(radius: 4)
             

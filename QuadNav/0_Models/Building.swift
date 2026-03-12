@@ -40,20 +40,20 @@ extension Building {
         
         // Each item here is an instance of Building
         Building(
-            name: "GIMM Lab",
-            coordinate: CLLocationCoordinate2D(latitude: 43.6025, longitude: -116.2034)
+            name: "Riverfront Hall",
+            coordinate: CLLocationCoordinate2D(latitude: 43.60490586285641, longitude: -116.20471633098414)
         ),
         Building(
             name: "Library",
-            coordinate: CLLocationCoordinate2D(latitude: 43.6028, longitude: -116.2040)
+            coordinate: CLLocationCoordinate2D(latitude: 43.60426249533757, longitude: -116.20323924845822)
         ),
         Building(
             name: "Student Union",
-            coordinate: CLLocationCoordinate2D(latitude: 43.6032, longitude: -116.2037)
+            coordinate: CLLocationCoordinate2D(latitude: 43.60176162233832, longitude: -116.2017352425342)
         ),
         Building(
-            name: "Science Building",
-            coordinate: CLLocationCoordinate2D(latitude: 43.6029, longitude: -116.2028)
+            name: "Administration Building",
+            coordinate: CLLocationCoordinate2D(latitude: 43.603688341185745, longitude: -116.20469907947239)
         )
     ]
 }

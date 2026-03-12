@@ -32,7 +32,7 @@ struct MapView: View {
     
     // Controls the map camera (what part of the map is visible).
     // This starts centered on the user's location if available.
-    @State private var position: MapCameraPosition = .userLocation(fallback: .automatic)
+    @State private var position: MapCameraPosition = .userLocation(followsHeading: true, fallback: .automatic)
     
     
     // Defines the layout of the map view.
@@ -72,6 +72,13 @@ struct MapView: View {
                 }
             }
         }
+        
+        .mapControls {
+                    MapCompass()
+                    // NEW: This button lets the user manually re-enable "Follow Heading" mode
+                    // if they accidentally scroll or rotate the map away.
+                    MapUserLocationButton()
+                }
         
         
         // MARK: - Recenter Logic

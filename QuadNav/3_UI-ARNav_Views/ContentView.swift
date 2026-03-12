@@ -74,11 +74,12 @@ struct ContentView: View {
             
             // Swaps out the background layer depending on the selected AR mode
             if currentMode == .ar {
-                ARNavigationView(targetBearing: navManager.targetBearing)
+                ARNavigationView(targetBearing: navManager.relativeBearing)
                     .ignoresSafeArea()
             } else if currentMode == .split {
                 VStack(spacing: 0) {
-                    ARNavigationView(targetBearing: navManager.targetBearing)
+                    // FIX: Make sure the split AR view gets the same bearing as the full AR view
+                    ARNavigationView(targetBearing: navManager.relativeBearing)
                     
                     // The Map & Arrow combined layer
                     ZStack {
@@ -91,9 +92,13 @@ struct ContentView: View {
                         
                         // NEW PLACEMENT: Moved DirectionArrow here in ZStack
                         if navManager.selectedBuilding != nil {
-                            DirectionArrowView(angle: navManager.targetBearing)
-                                .frame(width: 100, height: 100) // Smaller frame for split view
+                            // FIX: Changed targetBearing to relativeBearing
+                            // Now, if the map is rotated, the arrow still points at the building.
+                            DirectionArrowView(angle: navManager.relativeBearing)
+                                .frame(width: 140, height: 140)
                                 .shadow(radius: 5)
+                                // Added a small animation so the arrow turns smoothly
+                                .animation(.spring, value: navManager.relativeBearing)
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -122,6 +127,7 @@ struct ContentView: View {
                         DirectionArrowView(angle: navManager.targetBearing)
                             .frame(width: 140, height: 140)
                             .shadow(radius: 5)
+                            .animation(.spring, value: navManager.relativeBearing)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -284,7 +290,7 @@ struct ContentView: View {
         
         .sheet(isPresented: $showDebugView) {
             
-            DebugView(monitor: locationMonitor)
+            DebugView()
             
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
