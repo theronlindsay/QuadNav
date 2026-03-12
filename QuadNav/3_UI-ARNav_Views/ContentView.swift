@@ -74,12 +74,18 @@ struct ContentView: View {
             
             // Swaps out the background layer depending on the selected AR mode
             if currentMode == .ar {
-                ARNavigationView(targetBearing: navManager.relativeBearing)
+                ARNavigationView(
+                    targetBearing: navManager.selectedBuilding == nil ? 0 : navManager.targetBearing,
+                    deviceHeading: navManager.filteredHeadingForUI ?? 0
+                )
                     .ignoresSafeArea()
             } else if currentMode == .split {
                 VStack(spacing: 0) {
                     // FIX: Make sure the split AR view gets the same bearing as the full AR view
-                    ARNavigationView(targetBearing: navManager.relativeBearing)
+                    ARNavigationView(
+                        targetBearing: navManager.selectedBuilding == nil ? 0 : navManager.targetBearing,
+                        deviceHeading: navManager.filteredHeadingForUI ?? 0
+                    )
                     
                     // The Map & Arrow combined layer
                     ZStack {
@@ -98,7 +104,7 @@ struct ContentView: View {
                                 .frame(width: 140, height: 140)
                                 .shadow(radius: 5)
                                 // Added a small animation so the arrow turns smoothly
-                                .animation(.spring, value: navManager.relativeBearing)
+                                .animation(.spring, value: navManager.targetBearing)
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -124,10 +130,10 @@ struct ContentView: View {
                     // but it is still NOT moving dynamically with the user pin.
                     // (That requires complex MapView refactoring).
                     if navManager.selectedBuilding != nil {
-                        DirectionArrowView(angle: navManager.targetBearing)
+                        DirectionArrowView(angle: navManager.relativeBearing)
                             .frame(width: 140, height: 140)
                             .shadow(radius: 5)
-                            .animation(.spring, value: navManager.relativeBearing)
+                            .animation(.spring, value: navManager.targetBearing)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -139,8 +145,9 @@ struct ContentView: View {
             
             // MARK: - Overlay UI (This stack stays fixed)
             
-            VStack {
+            VStack(spacing: 4) {
                 
+               
                 // MARK: - Navigation Mode Selector
                 
                 Picker("Navigation Mode", selection: $currentMode) {
@@ -290,7 +297,7 @@ struct ContentView: View {
         
         .sheet(isPresented: $showDebugView) {
             
-            DebugView()
+            DebugView(monitor: locationMonitor)
             
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -307,3 +314,4 @@ struct ContentView: View {
         }
     }
 }
+

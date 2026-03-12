@@ -10,6 +10,7 @@ import RealityKit
 
 struct ARNavigationView: UIViewRepresentable {
     var targetBearing: Double
+    var deviceHeading: Double
     
     func makeUIView(context: Context) -> ARView {
         let arView = ARView(frame: .zero)
@@ -19,7 +20,10 @@ struct ARNavigationView: UIViewRepresentable {
     
     func updateUIView(_ uiView: ARView, context: Context) {
         // Continuously pass the bearing from NavigationManager to the AR manager
-        context.coordinator.update(bearing: targetBearing)
+        context.coordinator.update(
+            bearing: targetBearing,
+            heading: deviceHeading
+        )
     }
     
     func makeCoordinator() -> ARSessionManager {

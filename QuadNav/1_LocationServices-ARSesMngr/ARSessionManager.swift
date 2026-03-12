@@ -5,6 +5,7 @@ import SwiftUI
 class ARSessionManager: NSObject, ARSessionDelegate {
     weak var arView: ARView?
     var arrowEntity: GroundArrowEntity?
+    var sessionHeadingOffset: Double = 0
     var currentBearing: Double = 0.0 {
         didSet { updateArrowRotation() }
     }
@@ -12,6 +13,7 @@ class ARSessionManager: NSObject, ARSessionDelegate {
     func setup(arView: ARView) {
         self.arView = arView
         arView.session.delegate = self
+       
         
         let config = ARWorldTrackingConfiguration()
         config.planeDetection = [.horizontal]
@@ -41,7 +43,12 @@ class ARSessionManager: NSObject, ARSessionDelegate {
             arView?.scene.removeAnchor(currentAnchor)
         }
         
-        let anchor = AnchorEntity(world: transform)
+        var fixedTransform = transform
+        fixedTransform.columns.0 = [1,0,0,0]
+        fixedTransform.columns.1 = [0,1,0,0]
+        fixedTransform.columns.2 = [0,0,1,0]
+
+        let anchor = AnchorEntity(world: fixedTransform)
         anchor.name = "ArrowAnchor"
         
         let arrow = GroundArrowEntity()
@@ -52,14 +59,22 @@ class ARSessionManager: NSObject, ARSessionDelegate {
         updateArrowRotation()
     }
     
-    func update(bearing: Double) {
+    func update(bearing: Double, heading: Double){
+        
+        let correctedBearing = bearing - heading
+        
+        // Ignore extremely small heading changes to prevent jitter
+        if abs(bearing - currentBearing) < 0.5 { return }
+        
         self.currentBearing = bearing
         updateArrowRotation()
     }
     
     private func updateArrowRotation() {
         // Rotate around Y to point toward targetBearing
-        let radians = Float(currentBearing) * (.pi / 180.0)
-        arrowEntity?.transform.rotation = simd_quatf(angle: -radians, axis: [0, 1, 0])
+        let correctedBearing = currentBearing - sessionHeadingOffset
+        let radians = Float(correctedBearing) * (.pi / 180)
+
+        arrowEntity?.orientation = simd_quatf(angle: -radians, axis: [0,1,0])
     }
 }

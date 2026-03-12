@@ -24,45 +24,35 @@ struct DirectionArrowView: View {
             
             ZStack {
                 
-            
-            // SF Symbol arrow outline icon provided by Apple.
-          Image(systemName: "location.north.fill")
-                
-                // Allows the image to resize instead of staying fixed.
-                .resizable()
-                
-                // Keeps the arrow's proportions correct while resizing.
-                .scaledToFit()
-                
-                // Sets the size of the arrow.
-                .frame(width: 80, height: 80)
-                
-                // Rotates the arrow based on the angle value.
-                // This is how the arrow points toward the target location.
-                .rotationEffect(.degrees(angle))
-                .animation(.easeOut(duration: 0.2), value: angle)
-                
-                // Sets the arrow color.
-                .foregroundStyle(.orange)
-                
-                // Adds a small shadow for better visibility.
-                .shadow(radius: 4)
+                Image(systemName: "location.north.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 80, height: 80)
+                    
+                    // Orientation correction
+                    .rotationEffect(.degrees(angle))
+                    
+                    .animation(.easeOut(duration: 0.2), value: angle)
+                    .foregroundStyle(.orange)
+                    .shadow(radius: 4)
                 
                 Image(systemName: "location.north")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 80, height: 80)
+                    
+                    // Orientation correction
                     .rotationEffect(.degrees(angle))
+                    
                     .animation(.easeOut(duration: 0.2), value: angle)
                     .foregroundStyle(.blue)
                     .shadow(radius: 4)
-            
             }
-            // Instruction text displayed under the arrow.
+
             Text("Follow Arrow")
-                .font(.caption)   // Small caption-style text
-                .bold()           // Makes the text bold
-                .padding(.top, 5) // Adds a little space above the text
+                .font(.caption)
+                .bold()
+                .padding(.top, 5)
         }
     }
 }
