@@ -1,38 +1,43 @@
 //
 // Building.swift
-// Created by BrandonWilliams & AmberTaggart
+// Created by Brandon Williams
 //
 
-import Foundation
-import CoreLocation
+import Foundation   // Provides basic Swift types like String, Array, UUID, and data utilities
+import CoreLocation // Provides types to work with GPS coordinates and locations
 
-// Represents a campus building with a name and map coordinate
+// MARK: - Building Model
+// This struct represents a building on campus. We store basic information like name and location.
 struct Building: Identifiable, Equatable, Hashable {
     
-    // MARK: - Properties
+    // MARK: Properties
     
-    let id = UUID() // Unique identifier
+    // Unique ID for each building. Used to compare or identify objects.
+    let id = UUID()
+    
+    // The name of the building, e.g., "Library"
     let name: String
+    
+    // The GPS coordinates of the building
     let coordinate: CLLocationCoordinate2D
     
-    // MARK: - Equatable
-    
+    // MARK: Equatable Protocol
+    // Allows Swift to compare two Building objects to see if they are the same.
     static func == (lhs: Building, rhs: Building) -> Bool {
-        lhs.id == rhs.id
+        lhs.id == rhs.id // Two buildings are considered equal if their IDs match
     }
     
-    // MARK: - Hashable
-    
+    // MARK: Hashable Protocol
+    // Hashable allows a Building to be stored in a Set or used as a Dictionary key.
     func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
+        hasher.combine(id) // Use the unique ID for hashing
     }
 }
 
 // MARK: - Sample Data
-
+// Adding a convenient list of sample buildings for testing and UI previews
 extension Building {
     
-    // Demo list of campus buildings
     static let campusBuildings: [Building] = [
         
         Building(

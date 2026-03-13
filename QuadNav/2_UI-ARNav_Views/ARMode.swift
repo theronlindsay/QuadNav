@@ -1,21 +1,23 @@
 //
 // ARMode.swift
-// QuadNav
-//
-// Created by Brandon Williams on 3/9/26.
+// Created by Brandon Williams
 //
 
 import Foundation
 
-// Defines the app's current AR display mode
+// MARK: - AR Mode
+// This enum defines the different navigation modes the user can choose.
+//
+// Enums (short for "enumerations") let us define a type with a fixed number of options.
+// Here, the user can switch the app between map, split-screen, or full AR view.
 enum ARMode {
     
-    // Show standard map view
+    /// Full map view only
     case map
     
-    // Split-screen map + AR
+    /// Split-screen: half map, half AR view
     case split
     
-    // Full AR view
+    /// Full AR view
     case ar
 }

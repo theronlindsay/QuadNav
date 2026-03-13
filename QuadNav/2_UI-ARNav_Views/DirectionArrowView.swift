@@ -4,44 +4,53 @@
 //
 
 import SwiftUI
+// SwiftUI lets us build user interfaces in a declarative way.
+// Instead of manually managing UIKit elements, we describe what the UI should look like,
+// and SwiftUI updates it automatically when state changes.
 
-// MARK: - Directional Arrow View
-// Displays a rotating arrow pointing toward a destination
+// MARK: - Direction Arrow View
+// This view displays an arrow pointing toward the selected destination.
+// It can be used on top of a map or AR view to give the user visual navigation guidance.
 struct DirectionArrowView: View {
     
-    // MARK: Properties
+    // MARK: - Properties
     
-    /// Rotation angle in degrees
+    /// The angle in degrees the arrow should rotate.
+    /// This is calculated in NavigationManager as `relativeBearing`,
+    /// which is the difference between the user's heading and the direction to the target.
     let angle: Double
     
-    
-    // MARK: Body
-    
+    // MARK: - Body
     var body: some View {
+        // VStack stacks the arrow image and a label vertically
         VStack {
             
-            // Arrow images stacked
+            // ZStack overlays two arrow images for depth and visual clarity
             ZStack {
                 
-                Image(systemName: "location.north.fill")
+                // MARK: - Foreground Arrow (Orange)
+                Image(systemName: "location.north.fill") // Solid arrow
+                    .resizable()                         // Make the SF Symbol scalable
+                    .scaledToFit()                        // Keep aspect ratio
+                    .frame(width: 80, height: 80)        // Fix the size
+                    .rotationEffect(.degrees(angle))      // Rotate based on `angle`
+                    .animation(.easeOut(duration: 0.2), value: angle) // Smooth rotation animation
+                    .foregroundStyle(.orange)            // Set arrow color
+                    .shadow(radius: 4)                   // Add subtle shadow for depth
+                    
+                // MARK: - Background Arrow (Blue)
+                Image(systemName: "location.north")      // Outline arrow
                     .resizable()
                     .scaledToFit()
                     .frame(width: 80, height: 80)
-                    .rotationEffect(.degrees(angle)) // Rotate arrow
+                    .rotationEffect(.degrees(angle))    // Rotate together with the orange arrow
                     .animation(.easeOut(duration: 0.2), value: angle)
-                    .foregroundStyle(.orange)
-                    .shadow(radius: 4)
-                
-                Image(systemName: "location.north")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 80, height: 80)
-                    .rotationEffect(.degrees(angle))
-                    .animation(.easeOut(duration: 0.2), value: angle)
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(.blue)            // Color contrast behind foreground arrow
                     .shadow(radius: 4)
             }
-
+            
+            // MARK: - Label
+            // Adds text below the arrow for clarity
             Text("Follow Arrow")
                 .font(.caption)
                 .bold()

@@ -5,42 +5,52 @@
 
 import SwiftUI
 import MapKit
+// SwiftUI: for building user interface declaratively
+// MapKit: to display maps, annotations, overlays, and geographic regions
 
-// MARK: - Map Radius View
-// Displays a map highlighting a circular geofence area
+// MARK: - MapRadiusView
+// Displays a map showing a circular radius (geofence) around a location.
+// Useful for visualizing the Quad area and user location for debugging or navigation.
 struct MapRadiusView: View {
     
-    // MARK: Properties
-    
-    /// Monitors location and geofence data
+    // MARK: - Bindable Monitor
+    // Bindable allows two-way data binding between the LocationMonitor and this view
     @Bindable var monitor: LocationMonitor
+    // Provides access to userLocation, center coordinate, and radius
     
-    /// Controls the map camera position
+    // MARK: - Map Camera Position
     @State private var position: MapCameraPosition = .automatic
+    // Tracks the camera (view) position of the map
+    // Starts as automatic, can be adjusted when the view appears
     
-    // MARK: Body
-    
+    // MARK: - Body
     var body: some View {
+        
+        // MARK: - Map
         Map(position: $position) {
             
-            // Draw geofence circle
+            // MARK: - Circle Overlay
+            // Visualizes the geofence radius
             MapCircle(center: monitor.center, radius: monitor.radius)
-                .foregroundStyle(.blue.opacity(0.2))
-                .stroke(.blue, lineWidth: 2)
+                .foregroundStyle(.blue.opacity(0.2)) // Light blue fill with transparency
+                .stroke(.blue, lineWidth: 2)          // Blue border line
             
-            // User location marker
+            // MARK: - User Location Annotation
+            // Adds a marker for the user's current location
             UserAnnotation()
         }
         
-        // Map controls for user interaction
+        // MARK: - Map Controls
+        // Adds interactive controls for compass, scale, and user location
         .mapControls {
-            MapUserLocationButton()
-            MapCompass()
-            MapScaleView()
+            MapUserLocationButton() // Button to center on user location
+            MapCompass()            // Shows compass on map
+            MapScaleView()          // Displays scale (distance) on map
         }
         
-        // Center map on geofence region when view appears
+        // MARK: - Map Camera Setup
         .onAppear {
+            // When the view appears, position the map to show the Quad circle fully
             position = .region(
                 MKCoordinateRegion(
                     center: monitor.center,
@@ -48,6 +58,7 @@ struct MapRadiusView: View {
                     longitudinalMeters: monitor.radius * 3
                 )
             )
+            // Multiplied by 3 so the circle isn’t too close to edges of the map
         }
     }
 }

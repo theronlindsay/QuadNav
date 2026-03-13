@@ -1,27 +1,34 @@
 //
 // DebugView.swift
-// Created by Theron
+// Created by Brandon Williams & Amber
 //
 
 import SwiftUI
 import CoreLocation
+// SwiftUI: for building UI
+// CoreLocation: to display user's GPS coordinates
 
-// MARK: - Developer Tools View
-// Shows debugging info for location, geofence, and Quad monitoring
+// MARK: - DebugView
+// Provides a developer interface to monitor user location, geofence radius, and Quad detection.
+// Useful for testing and tuning geofence behavior.
 struct DebugView: View {
     
     // MARK: - Environment
     
+    // Allows the sheet to dismiss itself when the "Close" button is tapped
     @Environment(\.dismiss) private var dismiss
+    
+    // Pulls the shared LocationMonitor instance from the environment
+    // Gives access to user location, geofence radius, Quad center, and Quad status
     @Environment(LocationMonitor.self) private var monitor
     
     // MARK: - Body
-    
     var body: some View {
         NavigationStack {
             VStack {
                 
-                // Status if user is inside the Quad
+                // MARK: - Quad Status
+                // Displays a message when the user is inside the Quad geofence
                 if monitor.isUserInQuad {
                     Text("📍 You are inside the Quad")
                         .font(.headline)
@@ -31,23 +38,30 @@ struct DebugView: View {
                         .foregroundStyle(.green)
                         .cornerRadius(10)
                         .padding(.horizontal)
-                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .transition(
+                            .move(edge: .top)
+                            .combined(with: .opacity)
+                        )
                 }
-
-                // Map radius preview
+                
+                // MARK: - Map Preview
+                // Shows the geofence as a circle on a map and the user’s current location
                 MapRadiusView(monitor: monitor)
                     .frame(height: 300)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .padding()
-
-                // Settings list
+                
+                // MARK: - List of Debug Info
                 List {
                     
-                    // MARK: Geofence Radius
+                    // Section to adjust the geofence radius
                     Section("Geofence Radius") {
                         VStack(alignment: .leading) {
+                            // Show the current radius in meters
                             Text("Radius: \(Int(monitor.radius)) m")
                             
+                            // Slider allows live adjustment of the geofence radius
+                            // The binding ensures that changing the slider updates LocationMonitor.radius
                             Slider(
                                 value: Bindable(monitor).radius,
                                 in: 50...3000,
@@ -56,13 +70,13 @@ struct DebugView: View {
                         }
                     }
                     
-                    // MARK: Quad Center
+                    // Section to display Quad center coordinates
                     Section("Quad Center") {
                         LabeledContent("Latitude", value: "\(monitor.center.latitude)")
                         LabeledContent("Longitude", value: "\(monitor.center.longitude)")
                     }
                     
-                    // MARK: Current Location
+                    // Section to show the user’s current GPS location (if available)
                     if let location = monitor.userLocation {
                         Section("Current Location") {
                             LabeledContent("Latitude", value: "\(location.coordinate.latitude)")
@@ -72,20 +86,23 @@ struct DebugView: View {
                 }
             }
             
+            // MARK: - Navigation Title and Toolbar
             .navigationTitle("Developer Tools")
-            
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
+                    // Button to close this sheet
                     Button("Close") { dismiss() }
                 }
             }
             
-            // Start monitoring when view appears
+            // MARK: - Start Monitoring
+            // Task runs asynchronously to start location monitoring
+            // It will run when the view appears or when monitor.radius changes
             .task(id: monitor.radius) {
                 await monitor.startLocationMonitoring()
             }
             
-            // Stop monitoring when view disappears
+            // Stop monitoring when this view disappears to save resources
             .onDisappear {
                 monitor.stop()
             }
@@ -93,8 +110,8 @@ struct DebugView: View {
     }
 }
 
-// MARK: - Preview
-
+// MARK: - SwiftUI Preview
+// Allows Xcode canvas to show a live preview of this view
 #Preview {
     DebugView()
         .environment(LocationMonitor())
